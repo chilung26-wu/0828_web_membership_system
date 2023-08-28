@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, session
+from bcrypt import hashpw, checkpw, gensalt
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Replace with a strong secret key
@@ -15,7 +16,10 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        users[username] = password  # Store the user in the dictionary (not secure)
+        # Hash the password before storing it
+        hashed_password = hashpw(password.encode('utf-8'), gensalt())
+        # Store the hashed password in the dictionary
+        users[username] = hashed_password        
         return redirect('/')
     else:
         return render_template('register.html')
@@ -33,14 +37,14 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        if username in users and users[username] == password:
+        if username in users and checkpw(password.encode('utf-8'), users[username]):
             session['username'] = username
             return redirect('/dashboard')
         else:
             return "Invalid credentials. Please try again."
     else:
         return render_template('login.html')
-        
+
 # @app.route('/login', methods=['POST'])
 # def login():
 #     username = request.form['username']
